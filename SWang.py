@@ -164,53 +164,54 @@ def SWang(T):
 
     return Ising, E_mean, M_mean, Esq_mean, Msq_mean
 
-# M = np.array([])
-# E = np.array([])
-# M_sus = np.array([])
-# SpcH = np.array([])
-# for T in np.linspace(0.1, 5, 20):
-#     [Ising, E_mean, M_mean, Esq_mean, Msq_mean] = Metropolis(T)
-#     M = np.append(M, np.abs(M_mean))
-#     E = np.append(E, E_mean)
-#     M_sus = np.append(M_sus, 1 / T * (Msq_mean - M_mean ** 2))
-#     SpcH = np.append(SpcH, 1 / T ** 2 * (Esq_mean - E_mean ** 2))
-#
-# # plot the figures
-# T = np.linspace(0.1, 5, 20)
-#
-# plt.figure()
-# plt.plot(T, E, 'rx-')
-# plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
-# plt.ylabel(r'$\langle E \rangle$ per site $(J)$')
-# plt.savefig("E.pdf", format='pdf', bbox_inches='tight')
-#
-# plt.figure()
-# plt.plot(T, SpcH, 'kx-')
-# plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
-# plt.ylabel(r'$C_V$ per site $(\frac{J^2}{k_B^2})$')
-# plt.savefig("Cv.pdf", format='pdf', bbox_inches='tight')
-#
-# plt.figure()
-# plt.plot(T, M, 'bx-')
-# plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
-# plt.ylabel(r'$\langle|M|\rangle$ per site $(\mu)$')
-# plt.savefig("M.pdf", format='pdf', bbox_inches='tight')
-#
-# plt.figure()
-# plt.plot(T, M_sus, 'gx-')
-# plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
-# plt.ylabel(r'$\chi$ $(\frac{\mu}{k_B})$')
-# plt.savefig("chi.pdf", format='pdf', bbox_inches='tight')
-#
-# plt.tight_layout()
-# fig = plt.gcf()
-# plt.show()
+ 
+M = np.array([])
+E = np.array([])
+M_sus = np.array([])
+SpcH = np.array([])
+for T in np.linspace(0.1, 5, 20):
+    [Ising, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
+    M = np.append(M, np.abs(M_mean))
+    E = np.append(E, E_mean)
+    M_sus = np.append(M_sus, 1 / T * (Msq_mean - M_mean ** 2))
+    SpcH = np.append(SpcH, 1 / T ** 2 * (Esq_mean - E_mean ** 2))
 
-T = 3.5
-[Ising, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
-[E1,M1] = EnMag(Ising)
-E2 = E1/(L**2)
-# plot the network cluster
+# plot the figures
+T = np.linspace(0.1, 5, 20)
+
 plt.figure()
-plt.matshow(Ising,cmap='cool')
-plt.axis('off')
+plt.plot(T, E, 'rx-')
+plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
+plt.ylabel(r'$\langle E \rangle$ per site $(J)$')
+plt.savefig("E.pdf", format='pdf', bbox_inches='tight')
+
+plt.figure()
+plt.plot(T, SpcH, 'kx-')
+plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
+plt.ylabel(r'$C_V$ per site $(\frac{J^2}{k_B^2})$')
+plt.savefig("Cv.pdf", format='pdf', bbox_inches='tight')
+
+plt.figure()
+plt.plot(T, M, 'bx-')
+plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
+plt.ylabel(r'$\langle|M|\rangle$ per site $(\mu)$')
+plt.savefig("M.pdf", format='pdf', bbox_inches='tight')
+
+plt.figure()
+plt.plot(T, M_sus, 'gx-')
+plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
+plt.ylabel(r'$\chi$ $(\frac{\mu}{k_B})$')
+plt.savefig("chi.pdf", format='pdf', bbox_inches='tight')
+
+plt.tight_layout()
+fig = plt.gcf()
+plt.show()
+
+#T = 3.5
+#[Ising, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
+#[E1,M1] = EnMag(Ising)
+#E2 = E1/(L**2)
+## plot the network cluster
+#plt.figure()
+#plt.matshow(Ising,cmap='cool')
+#plt.axis('off')

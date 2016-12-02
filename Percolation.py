@@ -103,7 +103,7 @@ A = label.reshape(N,N)
 plt.matshow(A,cmap=my_cmap,vmin=0.0000001)
 plt.axis('off')
 
-relabel(label,prp_label,N)
+relabel (label,prp_label,N)
 B = label.reshape(N,N)
 plt.matshow(B,cmap=my_cmap,vmin=0.0000001)
 plt.axis('off')

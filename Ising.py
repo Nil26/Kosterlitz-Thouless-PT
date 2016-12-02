@@ -9,9 +9,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
-L = 20
-ESTEP = 100000
-STEP = 10000000
+L = 10
+ESTEP = 1000
+STEP = 100000
 
 # Intitialize the Ising Network
 def Init():
