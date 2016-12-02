@@ -1,6 +1,8 @@
 # Kosterlitz-Thouless-PT
 2-D XY Model with Monte Carlo method to simulate the KT Phase Transition
 
+Percolation.py is for Hoshen-Kopelman algorithm in site-percolation case.
+
 Ising.py is for 2-D Ising model in single spin flip with Metropolis method.
 
 SWang.py is for 2-D Ising model in Swendsen Wang method.
