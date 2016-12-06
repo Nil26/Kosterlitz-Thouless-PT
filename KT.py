@@ -4,18 +4,19 @@
 @author: zhshang
 """
 import numpy as np
+from numpy import linalg as LA
 import matplotlib.pyplot as plt
 
 L = 10
 ESTEP = 1000
 STEP = 100000
 
-J = 1 # J>0 to make it ferromagnetic
+# J>0 to make it ferromagnetic
 
-# Intitialize the Ising Network
+# Intitialize the XY network
 def Init():
-    #return np.random.rand(L, L)*2*np.pi
-    return np.ones([L, L])
+    return np.random.rand(L, L)*2*np.pi
+    #return np.ones([L, L])
 
 # periodic neighbor
 def next(x):
@@ -25,12 +26,12 @@ def next(x):
         return x+1
 
 # construct the bond lattice
-def FreezeBonds(Ising,T):
-    freezProb = 1 - np.exp(-2 * J / T)
+def FreezeBonds(Ising,T,J):
     iBondFrozen = np.zeros([L,L])
     jBondFrozen = np.zeros([L,L])
     for i in np.arange(L):
         for j in np.arange(L):
+            freezProb = 1 - np.exp(-2 * J[i][j] / T)
             if (Ising[i][j] == Ising[next(i)][j]) and (np.random.rand() < freezProb):
                 iBondFrozen[i][j] = 1
             if (Ising[i][j] == Ising[i][next(j)]) and (np.random.rand() < freezProb):
@@ -123,34 +124,71 @@ def flipCluster(Ising,cluster,prp_label):
 
     return Ising,flips
 
-# Calculate the energy for the Ising system
-def EnMag(Ising):
+# Swendsen-Wang Algorithm in Ising model (with coupling constant dependency on sites)
+# One-step for Ising
+def oneMCstepIsing(Ising, J):
+    [iBondFrozen, jBondFrozen] = FreezeBonds(Ising, T, J)
+    [SWcluster, prp_label] = clusterfind(iBondFrozen, jBondFrozen)
+    [Ising, flips] = flipCluster(Ising, SWcluster, prp_label)
+    return Ising
+
+# Decompose XY network to two Ising networks with project direction proj
+def decompose(XY,proj):
+    x = np.cos(XY)
+    y = np.sin(XY)
+    x_rot = np.multiply(x,np.cos(proj))+np.multiply(y,np.sin(proj))
+    y_rot = -np.multiply(x,np.sin(proj))+np.multiply(y,np.cos(proj))
+    Isingx = np.sign(x_rot)
+    Isingy = np.sign(y_rot)
+    J_x = np.absolute(x_rot)
+    J_y = np.absolute(y_rot)
+    return Isingx, Isingy, J_x, J_y
+
+# Compose two Ising networks to XY network
+def compose(Isingx_new,Isingy_new,proj,J_x, J_y):
+    x_rot_new = np.multiply(Isingx_new,J_x)
+    y_rot_new = np.multiply(Isingy_new,J_y)
+    x_new = np.multiply(x_rot_new,np.cos(proj))-np.multiply(y_rot_new,np.sin(proj))
+    y_new = np.multiply(x_rot_new,np.sin(proj))+np.multiply(y_rot_new,np.cos(proj))
+    XY_new = np.arctan2(y_new,x_new)
+    return XY_new
+
+def oneMCstepXY(XY):
+    proj = np.random.rand()
+    [Isingx, Isingy, J_x, J_y] = decompose(XY, proj)
+    Isingx_new = oneMCstepIsing(Isingx, J_x)
+    Isingy_new = oneMCstepIsing(Isingy, J_y)
+    XY_new = compose(Isingx_new, Isingy_new, proj, J_x, J_y)
+    return XY_new
+
+# Calculate the energy for XY network
+def EnMag(XY):
     energy = 0
-    mag = 0
+    mag = np.array([0,0])
     for i in np.arange(L):
         for j in np.arange(L):
-            energy = energy - Ising[i][j]*(Ising[(i-1)%L][j]+Ising[(i+1)%L][j]+Ising[i][(j-1)%L]+Ising[i][(j+1)%L])
-            mag = mag + Ising[i][j]*1/(L**2)
-    return energy * 0.5, mag
+            # energy
+            energy = energy - (np.cos(XY[i][j]-XY[(i-1)%L][j])+np.cos(XY[i][j]-XY[(i+1)%L][j])+np.cos(XY[i][j]-XY[i][(j-1)%L])+np.cos(XY[i][j]-XY[i][(j+1)%L]))
+            # magnetization
+            magx = np.cos(XY)
+            magy = np.sin(XY)
+            mag = mag + np.array([magx,magy])
+    return energy * 0.5, LA.norm(mag)
 
-# Swendsen-Wang Algorithm for observables
+# Swendsen Wang method for XY model
 def SWang(T):
-    Ising = Init()
+    XY = Init()
     # thermal steps to get the equilibrium
     for step in np.arange(ESTEP):
-        [iBondFrozen,jBondFrozen] = FreezeBonds(Ising,T)
-        [SWcluster,prp_label] = clusterfind(iBondFrozen,jBondFrozen)
-        [Ising,flips] = flipCluster(Ising,SWcluster,prp_label)
+        XY = oneMCstepXY(XY)
     # finish with thermal equilibrium, and begin to calc observables
     E_sum = 0
     M_sum = 0
     Esq_sum = 0
     Msq_sum = 0
     for step in np.arange(STEP):
-        [iBondFrozen,jBondFrozen] = FreezeBonds(Ising,T)
-        [SWcluster,prp_label] = clusterfind(iBondFrozen,jBondFrozen)
-        [Ising,flips] = flipCluster(Ising,SWcluster,prp_label)
-        [E,M] = EnMag(Ising)
+        XY = oneMCstepXY(XY)
+        [E,M] = EnMag(XY)
 
         E_sum += E
         M_sum += M
@@ -162,14 +200,14 @@ def SWang(T):
     Esq_mean = Esq_sum / (STEP - ESTEP) / (L ** 4)
     Msq_mean = Msq_sum / (STEP - ESTEP)
 
-    return Ising, E_mean, M_mean, Esq_mean, Msq_mean
+    return XY, E_mean, M_mean, Esq_mean, Msq_mean
 
 # M = np.array([])
 # E = np.array([])
 # M_sus = np.array([])
 # SpcH = np.array([])
 # for T in np.linspace(0.1, 5, 20):
-#     [Ising, E_mean, M_mean, Esq_mean, Msq_mean] = Metropolis(T)
+#     [Ising, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
 #     M = np.append(M, np.abs(M_mean))
 #     E = np.append(E, E_mean)
 #     M_sus = np.append(M_sus, 1 / T * (Msq_mean - M_mean ** 2))
@@ -207,8 +245,8 @@ def SWang(T):
 # plt.show()
 
 T = 3.5
-[Ising, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
-[E1,M1] = EnMag(Ising)
+[XY, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
+[E1,M1] = EnMag(XY)
 E2 = E1/(L**2)
 # plot the network cluster
 plt.figure()

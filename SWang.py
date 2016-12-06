@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 L = 10
 ESTEP = 1000
-STEP = 100000
+STEP = 10000
 
 J = 1 # J>0 to make it ferromagnetic
 
@@ -146,6 +146,7 @@ def SWang(T):
     M_sum = 0
     Esq_sum = 0
     Msq_sum = 0
+    
     for step in np.arange(STEP):
         [iBondFrozen,jBondFrozen] = FreezeBonds(Ising,T)
         [SWcluster,prp_label] = clusterfind(iBondFrozen,jBondFrozen)
@@ -153,14 +154,14 @@ def SWang(T):
         [E,M] = EnMag(Ising)
 
         E_sum += E
-        M_sum += M
+        M_sum += np.abs(M)
         Esq_sum += E ** 2
         Msq_sum += M ** 2
 
-    E_mean = E_sum / (STEP - ESTEP) / (L ** 2)
-    M_mean = M_sum / (STEP - ESTEP)
-    Esq_mean = Esq_sum / (STEP - ESTEP) / (L ** 4)
-    Msq_mean = Msq_sum / (STEP - ESTEP)
+    E_mean = E_sum / STEP / (L ** 2)
+    M_mean = M_sum / STEP
+    Esq_mean = Esq_sum / STEP / (L ** 4)
+    Msq_mean = Msq_sum / STEP
 
     return Ising, E_mean, M_mean, Esq_mean, Msq_mean
 
@@ -207,7 +208,7 @@ plt.tight_layout()
 fig = plt.gcf()
 plt.show()
 
-#T = 3.5
+#T = 0.1
 #[Ising, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
 #[E1,M1] = EnMag(Ising)
 #E2 = E1/(L**2)
