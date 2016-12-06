@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 L = 10
 ESTEP = 1000
-STEP = 100000
+STEP = 10000
 
 # J>0 to make it ferromagnetic
 
@@ -164,15 +164,13 @@ def oneMCstepXY(XY):
 # Calculate the energy for XY network
 def EnMag(XY):
     energy = 0
-    mag = np.array([0,0])
     for i in np.arange(L):
         for j in np.arange(L):
             # energy
             energy = energy - (np.cos(XY[i][j]-XY[(i-1)%L][j])+np.cos(XY[i][j]-XY[(i+1)%L][j])+np.cos(XY[i][j]-XY[i][(j-1)%L])+np.cos(XY[i][j]-XY[i][(j+1)%L]))
-            # magnetization
-            magx = np.cos(XY)
-            magy = np.sin(XY)
-            mag = mag + np.array([magx,magy])
+    magx = np.sum(np.cos(XY))
+    magy = np.sum(np.sin(XY))
+    mag = np.array([magx,magy])
     return energy * 0.5, LA.norm(mag)
 
 # Swendsen Wang method for XY model
@@ -250,5 +248,5 @@ T = 3.5
 E2 = E1/(L**2)
 # plot the network cluster
 plt.figure()
-plt.matshow(Ising,cmap='cool')
+plt.matshow(XY,cmap='cool')
 plt.axis('off')
