@@ -7,11 +7,11 @@ import numpy as np
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
 
-L = 10
+L = 16
 ESTEP = 1000
-STEP = 10000
+STEP = 100000
 
-# J>0 to make it ferromagnetic
+J = 1 # J>0 to make it ferromagnetic
 
 # Intitialize the XY network
 def Init():
@@ -26,15 +26,16 @@ def next(x):
         return x+1
 
 # construct the bond lattice
-def FreezeBonds(Ising,T,J):
+def FreezeBonds(Ising,T,S):
     iBondFrozen = np.zeros([L,L])
     jBondFrozen = np.zeros([L,L])
     for i in np.arange(L):
         for j in np.arange(L):
-            freezProb = 1 - np.exp(-2 * J[i][j] / T)
-            if (Ising[i][j] == Ising[next(i)][j]) and (np.random.rand() < freezProb):
+            freezProb_nexti = 1 - np.exp(-2 * J * S[i][j] * S[next(i)][j] / T)
+            freezProb_nextj = 1 - np.exp(-2 * J * S[i][j] * S[i][next(j)] / T)
+            if (Ising[i][j] == Ising[next(i)][j]) and (np.random.rand() < freezProb_nexti):
                 iBondFrozen[i][j] = 1
-            if (Ising[i][j] == Ising[i][next(j)]) and (np.random.rand() < freezProb):
+            if (Ising[i][j] == Ising[i][next(j)]) and (np.random.rand() < freezProb_nextj):
                 jBondFrozen[i][j] = 1
     return iBondFrozen, jBondFrozen
 
@@ -126,8 +127,8 @@ def flipCluster(Ising,cluster,prp_label):
 
 # Swendsen-Wang Algorithm in Ising model (with coupling constant dependency on sites)
 # One-step for Ising
-def oneMCstepIsing(Ising, J):
-    [iBondFrozen, jBondFrozen] = FreezeBonds(Ising, T, J)
+def oneMCstepIsing(Ising, S):
+    [iBondFrozen, jBondFrozen] = FreezeBonds(Ising, T, S)
     [SWcluster, prp_label] = clusterfind(iBondFrozen, jBondFrozen)
     [Ising, flips] = flipCluster(Ising, SWcluster, prp_label)
     return Ising
@@ -140,14 +141,14 @@ def decompose(XY,proj):
     y_rot = -np.multiply(x,np.sin(proj))+np.multiply(y,np.cos(proj))
     Isingx = np.sign(x_rot)
     Isingy = np.sign(y_rot)
-    J_x = np.absolute(x_rot)
-    J_y = np.absolute(y_rot)
-    return Isingx, Isingy, J_x, J_y
+    S_x = np.absolute(x_rot)
+    S_y = np.absolute(y_rot)
+    return Isingx, Isingy, S_x, S_y
 
 # Compose two Ising networks to XY network
-def compose(Isingx_new,Isingy_new,proj,J_x, J_y):
-    x_rot_new = np.multiply(Isingx_new,J_x)
-    y_rot_new = np.multiply(Isingy_new,J_y)
+def compose(Isingx_new,Isingy_new,proj,S_x, S_y):
+    x_rot_new = np.multiply(Isingx_new,S_x)
+    y_rot_new = np.multiply(Isingy_new,S_y)
     x_new = np.multiply(x_rot_new,np.cos(proj))-np.multiply(y_rot_new,np.sin(proj))
     y_new = np.multiply(x_rot_new,np.sin(proj))+np.multiply(y_rot_new,np.cos(proj))
     XY_new = np.arctan2(y_new,x_new)
@@ -155,10 +156,10 @@ def compose(Isingx_new,Isingy_new,proj,J_x, J_y):
 
 def oneMCstepXY(XY):
     proj = np.random.rand()
-    [Isingx, Isingy, J_x, J_y] = decompose(XY, proj)
-    Isingx_new = oneMCstepIsing(Isingx, J_x)
-    Isingy_new = oneMCstepIsing(Isingy, J_y)
-    XY_new = compose(Isingx_new, Isingy_new, proj, J_x, J_y)
+    [Isingx, Isingy, S_x, S_y] = decompose(XY, proj)
+    Isingx_new = oneMCstepIsing(Isingx, S_x)
+    Isingy_new = oneMCstepIsing(Isingy, S_y)
+    XY_new = compose(Isingx_new, Isingy_new, proj, S_x, S_y)
     return XY_new
 
 # Calculate the energy for XY network
@@ -171,7 +172,7 @@ def EnMag(XY):
     magx = np.sum(np.cos(XY))
     magy = np.sum(np.sin(XY))
     mag = np.array([magx,magy])
-    return energy * 0.5, LA.norm(mag)
+    return energy * 0.5, LA.norm(mag)/(L**2)
 
 # Swendsen Wang method for XY model
 def SWang(T):
@@ -193,56 +194,56 @@ def SWang(T):
         Esq_sum += E ** 2
         Msq_sum += M ** 2
 
-    E_mean = E_sum / (STEP - ESTEP) / (L ** 2)
+    E_mean = E_sum / (STEP - ESTEP) / (L**2)
     M_mean = M_sum / (STEP - ESTEP)
-    Esq_mean = Esq_sum / (STEP - ESTEP) / (L ** 4)
+    Esq_mean = Esq_sum / (STEP - ESTEP) / (L**4)
     Msq_mean = Msq_sum / (STEP - ESTEP)
 
     return XY, E_mean, M_mean, Esq_mean, Msq_mean
 
-# M = np.array([])
-# E = np.array([])
-# M_sus = np.array([])
-# SpcH = np.array([])
-# for T in np.linspace(0.1, 5, 20):
-#     [Ising, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
-#     M = np.append(M, np.abs(M_mean))
-#     E = np.append(E, E_mean)
-#     M_sus = np.append(M_sus, 1 / T * (Msq_mean - M_mean ** 2))
-#     SpcH = np.append(SpcH, 1 / T ** 2 * (Esq_mean - E_mean ** 2))
+#M = np.array([])
+#E = np.array([])
+#M_sus = np.array([])
+#SpcH = np.array([])
+#for T in np.linspace(0.1, 2, 20):
+#    [Ising, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
+#    M = np.append(M, np.abs(M_mean))
+#    E = np.append(E, E_mean)
+#    M_sus = np.append(M_sus, 1 / T * (Msq_mean - M_mean ** 2))
+#    SpcH = np.append(SpcH, 1 / T ** 2 * (Esq_mean - E_mean ** 2))
 #
-# # plot the figures
-# T = np.linspace(0.1, 5, 20)
+## plot the figures
+#T = np.linspace(0.1, 2, 10)
 #
-# plt.figure()
-# plt.plot(T, E, 'rx-')
-# plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
-# plt.ylabel(r'$\langle E \rangle$ per site $(J)$')
-# plt.savefig("E.pdf", format='pdf', bbox_inches='tight')
+#plt.figure()
+#plt.plot(T, E, 'rx-')
+#plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
+#plt.ylabel(r'$\langle E \rangle$ per site $(J)$')
+#plt.savefig("E.pdf", format='pdf', bbox_inches='tight')
 #
-# plt.figure()
-# plt.plot(T, SpcH, 'kx-')
-# plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
-# plt.ylabel(r'$C_V$ per site $(\frac{J^2}{k_B^2})$')
-# plt.savefig("Cv.pdf", format='pdf', bbox_inches='tight')
+#plt.figure()
+#plt.plot(T, SpcH, 'kx-')
+#plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
+#plt.ylabel(r'$C_V$ per site $(\frac{J^2}{k_B^2})$')
+#plt.savefig("Cv.pdf", format='pdf', bbox_inches='tight')
 #
-# plt.figure()
-# plt.plot(T, M, 'bx-')
-# plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
-# plt.ylabel(r'$\langle|M|\rangle$ per site $(\mu)$')
-# plt.savefig("M.pdf", format='pdf', bbox_inches='tight')
+#plt.figure()
+#plt.plot(T, M, 'bx-')
+#plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
+#plt.ylabel(r'$\langle|M|\rangle$ per site $(\mu)$')
+#plt.savefig("M.pdf", format='pdf', bbox_inches='tight')
 #
-# plt.figure()
-# plt.plot(T, M_sus, 'gx-')
-# plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
-# plt.ylabel(r'$\chi$ $(\frac{\mu}{k_B})$')
-# plt.savefig("chi.pdf", format='pdf', bbox_inches='tight')
+#plt.figure()
+#plt.plot(T, M_sus, 'gx-')
+#plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
+#plt.ylabel(r'$\chi$ $(\frac{\mu}{k_B})$')
+#plt.savefig("chi.pdf", format='pdf', bbox_inches='tight')
 #
-# plt.tight_layout()
-# fig = plt.gcf()
-# plt.show()
+#plt.tight_layout()
+#fig = plt.gcf()
+#plt.show()
 
-T = 3.5
+T = 0.1
 [XY, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
 [E1,M1] = EnMag(XY)
 E2 = E1/(L**2)
