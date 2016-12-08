@@ -248,6 +248,8 @@ plt.tight_layout()
 fig = plt.gcf()
 plt.show()
 
+np.savetxt('output.data',np.c_[T,E,SpcH,M,M_sus])
+
 #T = 0.1
 #[XY, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
 #Cv = 1 / T**2 * (Esq_mean - E_mean**2)
