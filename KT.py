@@ -3,13 +3,15 @@
 """
 @author: zhshang
 """
+import matplotlib
+matplotlib.use('Agg')
 import numpy as np
 from numpy import linalg as LA
 import matplotlib.pyplot as plt
 
 L = 16
 ESTEP = 1000
-STEP = 100000
+STEP = 10000
 
 J = 1 # J>0 to make it ferromagnetic
 
@@ -191,63 +193,67 @@ def SWang(T):
 
         E_sum += E
         M_sum += M
-        Esq_sum += E ** 2
-        Msq_sum += M ** 2
+        Esq_sum += E**2
+        Msq_sum += M**2
 
-    E_mean = E_sum / (STEP - ESTEP) / (L**2)
-    M_mean = M_sum / (STEP - ESTEP)
-    Esq_mean = Esq_sum / (STEP - ESTEP) / (L**4)
-    Msq_mean = Msq_sum / (STEP - ESTEP)
+    E_mean = E_sum/STEP/(L**2)
+    M_mean = M_sum/STEP
+    Esq_mean = Esq_sum/STEP/(L**4)
+    Msq_mean = Msq_sum/STEP
 
     return XY, E_mean, M_mean, Esq_mean, Msq_mean
 
-#M = np.array([])
-#E = np.array([])
-#M_sus = np.array([])
-#SpcH = np.array([])
-#for T in np.linspace(0.1, 2, 20):
-#    [Ising, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
-#    M = np.append(M, np.abs(M_mean))
-#    E = np.append(E, E_mean)
-#    M_sus = np.append(M_sus, 1 / T * (Msq_mean - M_mean ** 2))
-#    SpcH = np.append(SpcH, 1 / T ** 2 * (Esq_mean - E_mean ** 2))
-#
-## plot the figures
-#T = np.linspace(0.1, 2, 10)
-#
-#plt.figure()
-#plt.plot(T, E, 'rx-')
-#plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
-#plt.ylabel(r'$\langle E \rangle$ per site $(J)$')
-#plt.savefig("E.pdf", format='pdf', bbox_inches='tight')
-#
-#plt.figure()
-#plt.plot(T, SpcH, 'kx-')
-#plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
-#plt.ylabel(r'$C_V$ per site $(\frac{J^2}{k_B^2})$')
-#plt.savefig("Cv.pdf", format='pdf', bbox_inches='tight')
-#
-#plt.figure()
-#plt.plot(T, M, 'bx-')
-#plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
-#plt.ylabel(r'$\langle|M|\rangle$ per site $(\mu)$')
-#plt.savefig("M.pdf", format='pdf', bbox_inches='tight')
-#
-#plt.figure()
-#plt.plot(T, M_sus, 'gx-')
-#plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
-#plt.ylabel(r'$\chi$ $(\frac{\mu}{k_B})$')
-#plt.savefig("chi.pdf", format='pdf', bbox_inches='tight')
-#
-#plt.tight_layout()
-#fig = plt.gcf()
-#plt.show()
+M = np.array([])
+E = np.array([])
+M_sus = np.array([])
+SpcH = np.array([])
+Trange = np.linspace(0.1, 2.5, 10)
+for T in Trange:
+    [Ising, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
+    M = np.append(M, np.abs(M_mean))
+    E = np.append(E, E_mean)
+    M_sus = np.append(M_sus, 1/T*(Msq_mean-M_mean**2))
+    SpcH = np.append(SpcH, 1/T**2*(Esq_mean-E_mean**2))
 
-T = 0.1
-[XY, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
-[E1,M1] = EnMag(XY)
-E2 = E1/(L**2)
-# plot the network cluster
+# plot the figures
+T = Trange
+
 plt.figure()
-plt.matshow(XY,cmap='cool')
-plt.axis('off')
+plt.plot(T, E, 'rx-')
+plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
+plt.ylabel(r'$\langle E \rangle$ per site $(J)$')
+plt.savefig("E.pdf", format='pdf', bbox_inches='tight')
+
+plt.figure()
+plt.plot(T, SpcH, 'kx-')
+plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
+plt.ylabel(r'$C_V$ per site $(\frac{J^2}{k_B^2})$')
+plt.savefig("Cv.pdf", format='pdf', bbox_inches='tight')
+
+plt.figure()
+plt.plot(T, M, 'bx-')
+plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
+plt.ylabel(r'$\langle|M|\rangle$ per site $(\mu)$')
+plt.savefig("M.pdf", format='pdf', bbox_inches='tight')
+
+plt.figure()
+plt.plot(T, M_sus, 'gx-')
+plt.xlabel(r'Temperature $(\frac{J}{k_B})$')
+plt.ylabel(r'$\chi$ $(\frac{\mu}{k_B})$')
+plt.savefig("chi.pdf", format='pdf', bbox_inches='tight')
+
+plt.tight_layout()
+fig = plt.gcf()
+plt.show()
+
+#T = 0.1
+#[XY, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
+#Cv = 1 / T**2 * (Esq_mean - E_mean**2)
+#M_sus = 1 / T * (Msq_mean - M_mean**2)
+#[E1,M1] = EnMag(XY)
+#E2 = E1/(L**2)
+#print(E_mean, E2, M_mean, M1, Cv, M_sus)
+## plot the network cluster
+#plt.figure()
+#plt.matshow(XY,cmap='cool')
+#plt.axis('off')
