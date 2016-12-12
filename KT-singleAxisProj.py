@@ -250,14 +250,23 @@ plt.show()
 
 np.savetxt('output.data',np.c_[T,E,SpcH,M,M_sus])
 
-#T = 0.1
-#[XY, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
-#Cv = 1 / T**2 * (Esq_mean - E_mean**2)
-#M_sus = 1 / T * (Msq_mean - M_mean**2)
-#[E1,M1] = EnMag(XY)
-#E2 = E1/(L**2)
-#print(E_mean, E2, M_mean, M1, Cv, M_sus)
-## plot the network cluster
-#plt.figure()
-#plt.matshow(XY,cmap='cool')
-#plt.axis('off')
+# for T in np.linspace(0.1, 2.5, 20):
+#     [XY, E_mean, M_mean, Esq_mean, Msq_mean] = SWang(T)
+#     # plot the network cluster
+#     [X, Y] = np.mgrid[0:L, 0:L]
+#     X_plot = np.cos(XY)
+#     Y_plot = np.sin(XY)
+    
+#     plt.figure()
+#     plt.quiver(X,Y,X_plot,Y_plot,XY,pivot='mid',cmap=plt.cm.bwr, clim=[-3.15,3.15])
+#     plt.axis('equal')
+#     plt.axis('off')
+#     cbar = plt.colorbar(ticks=[-3.14, 0, 3.14])
+#     cbar.ax.set_yticklabels(['-PI', '0', 'PI'])
+    
+#     name = 'XY-T'+str(int(T*1000)).zfill(4)
+#     figname = name+'.pdf'
+#     plt.savefig(figname, format='pdf', bbox_inches='tight')
+
+#     filename = name+'.data'
+#     np.savetxt(filename,XY

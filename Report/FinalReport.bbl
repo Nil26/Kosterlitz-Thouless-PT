@@ -1,0 +1,25 @@
+\begin{thebibliography}{1}
+
+\bibitem{kosterlitz1973ordering}
+John~Michael Kosterlitz and David~James Thouless.
+\newblock Ordering, metastability and phase transitions in two-dimensional
+  systems.
+\newblock {\em Journal of Physics C: Solid State Physics}, 6(7):1181, 1973.
+
+\bibitem{WebThe2DXYmodel}
+Tobias~Rautenkranz Alexander~Käser, Tobias~Maier.
+\newblock The 2d xy model, 2007.
+
+\bibitem{olsson1995monte}
+Peter Olsson.
+\newblock Monte carlo analysis of the two-dimensional xy model. ii. comparison
+  with the kosterlitz renormalization-group equations.
+\newblock {\em Physical Review B}, 52(6):4526, 1995.
+
+\bibitem{mermin1966absence}
+N~David Mermin and Herbert Wagner.
+\newblock Absence of ferromagnetism or antiferromagnetism in one-or
+  two-dimensional isotropic heisenberg models.
+\newblock {\em Physical Review Letters}, 17(22):1133, 1966.
+
+\end{thebibliography}
